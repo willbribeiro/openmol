@@ -1,12 +1,41 @@
 import React, { useState } from 'react';
-import { Search, Box, Download, Settings, Info, Database } from 'lucide-react';
+import { Search, Box, Download, Settings, Info, Database, Loader2 } from 'lucide-react';
 import MoleculeViewer from './components/MoleculeViewer';
 import { MoleculeData } from './types/molecule';
+import { searchPubChem, getMoleculeData } from './utils/chemistry';
 
 const App: React.FC = () => {
   const [molecule, setMolecule] = useState<MoleculeData | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock data for demonstration
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const cids = await searchPubChem(searchQuery);
+      if (cids && cids.length > 0) {
+        const data = await getMoleculeData(cids[0]);
+        setMolecule({
+          ...data,
+          id: `pubchem-${cids[0]}`,
+        } as MoleculeData);
+      } else {
+        setError('No molecule found for that name.');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred during search.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const loadDemoMolecule = () => {
     setMolecule({
       id: 'demo-1',
@@ -19,6 +48,7 @@ ATOM      3  H2  HOH A   3      -0.757   0.559   0.000  1.00  20.00           H
 END
 `
     });
+    setError(null);
   };
 
   return (
@@ -33,43 +63,59 @@ END
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
           {/* Search Section */}
           <section>
-            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Search</h2>
-            <div className="space-y-2">
+            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Search (PubChem)</h2>
+            <form onSubmit={handleSearch} className="space-y-2">
               <div className="relative">
                 <input 
                   type="text" 
-                  placeholder="Search by SMILES, Name..."
-                  className="w-full bg-slate-900 border border-slate-600 rounded-md py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="e.g. Caffeine, Aspirin..."
+                  className="w-full bg-slate-900 border border-slate-600 rounded-md py-2 pl-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-                <button className="absolute right-2 top-1.5 text-slate-400 hover:text-white">
-                  <Search size={18} />
+                <button 
+                  type="submit"
+                  disabled={loading}
+                  className="absolute right-2 top-1.5 text-slate-400 hover:text-white disabled:opacity-50"
+                >
+                  {loading ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
                 </button>
               </div>
+            </form>
+            
+            <div className="mt-2">
               <button 
+                type="button"
                 onClick={loadDemoMolecule}
                 className="w-full text-left text-sm py-2 px-3 rounded-md hover:bg-slate-700 transition-colors"
               >
                 Load Demo (H2O)
               </button>
             </div>
+
+            {error && (
+              <div className="mt-2 p-2 text-xs text-red-400 bg-red-400/10 border border-red-400/20 rounded">
+                {error}
+              </div>
+            )}
           </section>
 
           {/* Tools Section */}
           <section>
             <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Tools</h2>
             <nav className="space-y-1">
-              <a href="#" className="flex items-center gap-3 py-2 px-3 rounded-md hover:bg-slate-700 transition-colors text-sm">
+              <button className="w-full flex items-center gap-3 py-2 px-3 rounded-md hover:bg-slate-700 transition-colors text-sm">
                 <Database size={18} />
                 <span>Databases</span>
-              </a>
-              <a href="#" className="flex items-center gap-3 py-2 px-3 rounded-md hover:bg-slate-700 transition-colors text-sm">
+              </button>
+              <button className="w-full flex items-center gap-3 py-2 px-3 rounded-md hover:bg-slate-700 transition-colors text-sm">
                 <Download size={18} />
                 <span>Export</span>
-              </a>
-              <a href="#" className="flex items-center gap-3 py-2 px-3 rounded-md hover:bg-slate-700 transition-colors text-sm">
+              </button>
+              <button className="w-full flex items-center gap-3 py-2 px-3 rounded-md hover:bg-slate/700 transition-colors text-sm">
                 <Settings size={18} />
                 <span>Settings</span>
-              </a>
+              </button>
             </nav>
           </section>
         </div>
@@ -86,7 +132,7 @@ END
         <header className="h-14 bg-slate-800 border-b border-slate-700 flex items-center justify-between px-4">
           <div className="flex items-center gap-4 text-sm">
             <span className="text-slate-400">Current Molecule:</span>
-            <span className="font-medium">{molecule ? molecule.name : 'None'}</span>
+            <span className="font-medium text-blue-300">{molecule ? molecule.name : 'None'}</span>
           </div>
           <div className="flex items-center gap-2">
             <button className="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-500 rounded text-white transition-colors">
@@ -100,9 +146,10 @@ END
           {molecule ? (
             <MoleculeViewer data={molecule} />
           ) : (
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500">
-              <Box size={48} className="mb-4 opacity-20" />
-              <p>No molecule loaded. Search or load a demo.</p>
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 text-center px-4">
+              <Box size={64} className="mb-4 opacity-20" />
+              <p className="text-lg font-light">Ready to visualize</p>
+              <p className="text-sm">Search for a molecule or load a demo to start.</p>
             </div>
           )}
         </div>
