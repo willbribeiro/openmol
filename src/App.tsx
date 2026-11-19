@@ -1,14 +1,35 @@
-import React, { useState } from 'react';
-import { Search, Box, Download, Settings, Info, Database, Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Search, Box, Download, Settings, Database, Loader2, Trash2 } from 'lucide-react';
 import MoleculeViewer from './components/MoleculeViewer';
-import { MoleculeData } from './types/molecule';
+import type { MoleculeViewerRef } from './components/MoleculeViewer';
+import type { MoleculeData } from './types/molecule';
 import { searchPubChem, getMoleculeData } from './utils/chemistry';
+import { saveToLocalStorage, loadFromLocalStorage, removeFromLocalStorage } from './utils/storage';
+import { useHotkeys } from 'react-hotkeys-hook';
 
 const App: React.FC = () => {
   const [molecule, setMolecule] = useState<MoleculeData | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const viewerRef = useRef<MoleculeViewerRef>(null);
+
+  // Load from local storage on mount
+  useEffect(() => {
+    const saved = loadFromLocalStorage<MoleculeData>('openmol_last_molecule');
+    if (saved) {
+      setMolecule(saved);
+    }
+  }, []);
+
+  // Save to local storage when molecule changes
+  useEffect(() => {
+    if (molecule) {
+      saveToLocalStorage('openmol_last_molecule', molecule);
+    } else {
+      removeFromLocalStorage('openmol_last_molecule');
+    }
+  }, [molecule]);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,13 +72,62 @@ END
     setError(null);
   };
 
+  const handleReset = () => {
+    setMolecule(null);
+    removeFromLocalStorage('openmol_last_molecule');
+  };
+
+  const handleExportPNG = async () => {
+    if (viewerRef.current && molecule) {
+      try {
+        const filename = await viewerRef.current.capture({
+          quality: 95,
+          width: undefined, // Use container width
+          height: undefined, // Use container height
+          filename: `${molecule.name.replace(/\s+/g, '_').toLowerCase()}_snapshot.png`,
+        });
+        
+        if (filename) {
+          setError(null);
+          // Show success message briefly
+          const successMsg = `Exported: ${filename}`;
+          console.log(successMsg);
+        }
+      } catch (err) {
+        console.error('Failed to export PNG:', err);
+        setError('Failed to capture image. Please try again.');
+      }
+    } else if (!molecule) {
+      setError('No molecule loaded to export.');
+    }
+  };
+
+  // Keyboard shortcut for export (Ctrl+Shift+E)
+  useHotkeys(
+    'ctrl+shift+e',
+    () => handleExportPNG(),
+    [molecule], // Dependencies
+    { preventDefault: true }
+  );
+
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-slate-900 text-slate-100">
       {/* Sidebar */}
       <aside className="w-80 bg-slate-800 border-r border-slate-700 flex flex-col">
-        <div className="p-4 border-b border-slate-700 flex items-center gap-2">
-          <Box className="text-blue-400" />
-          <h1 className="font-bold text-xl tracking-tight">OpenMol</h1>
+        <div className="p-4 border-b border-slate-700 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Box className="text-blue-400" />
+            <h1 className="font-bold text-xl tracking-tight">OpenMol</h1>
+          </div>
+          {molecule && (
+             <button 
+              onClick={handleReset}
+              title="Clear current molecule"
+              className="text-slate-500 hover:text-red-400 transition-colors"
+             >
+               <Trash2 size={16} />
+             </button>
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
@@ -135,7 +205,12 @@ END
             <span className="font-medium text-blue-300">{molecule ? molecule.name : 'None'}</span>
           </div>
           <div className="flex items-center gap-2">
-            <button className="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-500 rounded text-white transition-colors">
+            <button 
+              onClick={handleExportPNG}
+              disabled={!molecule}
+              className="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-500 disabled:bg-slate-600 disabled:text-slate-400 rounded text-white transition-colors flex items-center gap-2"
+            >
+              <Download size={16} />
               Export PNG
             </button>
           </div>
