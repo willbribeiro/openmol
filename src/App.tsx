@@ -3,7 +3,7 @@ import { Search, Box, Download, Settings, Database, Loader2, Trash2 } from 'luci
 import MoleculeViewer from './components/MoleculeViewer';
 import type { MoleculeViewerRef } from './components/MoleculeViewer';
 import type { MoleculeData } from './types/molecule';
-import { searchPubChem, getMoleculeData } from './utils/chemistry';
+import { searchPubChem, getMoleculeData, exportAsSDF, exportAsXYZ } from './utils/chemistry';
 import { saveToLocalStorage, loadFromLocalStorage, removeFromLocalStorage } from './utils/storage';
 import { useHotkeys } from 'react-hotkeys-hook';
 
@@ -143,6 +143,88 @@ END
     { preventDefault: true }
   );
 
+  const handleExportSDF = async () => {
+    if (viewerRef.current && molecule) {
+      try {
+        // Convert content to SDF format
+        const sdfContent = exportAsSDF(molecule);
+        
+        // Create Blob from SDF string
+        const blob = new Blob([sdfContent], { type: 'chemical/x-sdfile' });
+        
+        // Create download link and trigger download
+        const url = URL.createObjectURL(blob);
+        const filename = `${molecule.name.replace(/[\s\/\\:*?"<>|]/g, '_').toLowerCase()}_export.sdf`;
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        URL.revokeObjectURL(url);
+        setError(null);
+        const successMsg = `Exported SDF: ${filename}`;
+        console.log(successMsg);
+      } catch (err) {
+        console.error('Failed to export SDF:', err);
+        setError('Failed to export SDF. Please try again.');
+      }
+    } else if (!molecule) {
+      setError('No molecule loaded to export.');
+    }
+  };
+
+  const handleExportXYZ = async () => {
+    if (viewerRef.current && molecule) {
+      try {
+        // Convert content to XYZ format
+        const xyzContent = exportAsXYZ(molecule);
+        
+        // Create Blob from XYZ string
+        const blob = new Blob([xyzContent], { type: 'chemical/x-xyz' });
+        
+        // Create download link and trigger download
+        const url = URL.createObjectURL(blob);
+        const filename = `${molecule.name.replace(/[\s\/\\:*?"<>|]/g, '_').toLowerCase()}_export.xyz`;
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        URL.revokeObjectURL(url);
+        setError(null);
+        const successMsg = `Exported XYZ: ${filename}`;
+        console.log(successMsg);
+      } catch (err) {
+        console.error('Failed to export XYZ:', err);
+        setError('Failed to export XYZ. Please try again.');
+      }
+    } else if (!molecule) {
+      setError('No molecule loaded to export.');
+    }
+  };
+
+  // Keyboard shortcut for SDF export (Ctrl+Shift+D)
+  useHotkeys(
+    'ctrl+shift+d',
+    () => handleExportSDF(),
+    [molecule], // Dependencies
+    { preventDefault: true }
+  );
+
+  // Keyboard shortcut for XYZ export (Ctrl+Shift+X)
+  useHotkeys(
+    'ctrl+shift+x',
+    () => handleExportXYZ(),
+    [molecule], // Dependencies
+    { preventDefault: true }
+  );
+
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-slate-900 text-slate-100">
       {/* Sidebar */}
@@ -219,6 +301,22 @@ END
                 <Download size={18} />
                 <span>Export SVG</span>
               </button>
+              <button 
+                onClick={handleExportSDF}
+                disabled={!molecule}
+                className="w-full flex items-center gap-3 py-2 px-3 rounded-md hover:bg-slate-700 transition-colors text-sm disabled:opacity-50"
+              >
+                <Download size={18} />
+                <span>Export SDF</span>
+              </button>
+              <button 
+                onClick={handleExportXYZ}
+                disabled={!molecule}
+                className="w-full flex items-center gap-3 py-2 px-3 rounded-md hover:bg-slate-700 transition-colors text-sm disabled:opacity-50"
+              >
+                <Download size={18} />
+                <span>Export XYZ</span>
+              </button>
               <button className="w-full flex items-center gap-3 py-2 px-3 rounded-md hover:bg-slate-700 transition-colors text-sm">
                 <Settings size={18} />
                 <span>Settings</span>
@@ -257,6 +355,22 @@ END
             >
               <Download size={16} />
               Export SVG
+            </button>
+            <button 
+              onClick={handleExportSDF}
+              disabled={!molecule}
+              className="px-3 py-1 text-sm bg-orange-500 hover:bg-orange-400 disabled:bg-slate-600 disabled:text-slate-400 rounded text-white transition-colors flex items-center gap-2"
+            >
+              <Download size={16} />
+              Export SDF
+            </button>
+            <button 
+              onClick={handleExportXYZ}
+              disabled={!molecule}
+              className="px-3 py-1 text-sm bg-yellow-500 hover:bg-yellow-400 disabled:bg-slate-600 disabled:text-slate-400 rounded text-white transition-colors flex items-center gap-2"
+            >
+              <Download size={16} />
+              Export XYZ
             </button>
           </div>
         </header>
