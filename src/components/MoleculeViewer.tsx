@@ -3,6 +3,7 @@ import type { MoleculeData } from '../types/molecule';
 
 export interface MoleculeViewerRef {
   capture: (options?: CaptureOptions) => Promise<string | null>;
+  captureSVG: (options?: CaptureSVGOptions) => Promise<string | null>;
   clear: () => void;
 }
 
@@ -10,6 +11,13 @@ interface CaptureOptions {
   quality?: number; // 0-100, default 95
   width?: number; // Default to container width
   height?: number; // Default to container height
+  filename?: string; // Default to molecule name with timestamp
+}
+
+interface CaptureSVGOptions {
+  width?: number; // Default to container width (scaled appropriately)
+  height?: number; // Default to container height (scaled appropriately)
+  scale?: number; // SVG scale factor (default 1)
   filename?: string; // Default to molecule name with timestamp
 }
 
@@ -70,6 +78,62 @@ const MoleculeViewer = forwardRef<MoleculeViewerRef, MoleculeViewerProps>(({ dat
           });
         } catch (error) {
           console.error('Failed to capture PNG:', error);
+          resolve(null);
+        }
+      });
+    },
+    captureSVG: (options?: CaptureSVGOptions) => {
+      return new Promise<string | null>((resolve) => {
+        if (!viewerInstance.current || !containerRef.current) {
+          resolve(null);
+          return;
+        }
+
+        const config = viewerInstance.current.getConfig();
+        
+        // Get container dimensions and calculate appropriate SVG size
+        const container = containerRef.current!;
+        const baseWidth = options?.width || container.clientWidth;
+        const baseHeight = options?.height || container.clientHeight;
+        const scale = options?.scale ?? 1;
+        const svgWidth = baseWidth * scale;
+        const svgHeight = baseHeight * scale;
+
+        try {
+          // Get the current rendering configuration for SVG export
+          const exportConfig = {
+            dragAndDrop: false,
+            width: svgWidth,
+            height: svgHeight,
+            backgroundColor: config.backgroundColor,
+          };
+
+          viewerInstance.current.svg(exportConfig, (svgString: string) => {
+            if (!svgString || svgString.trim().length === 0) {
+              resolve(null);
+              return;
+            }
+
+            const filename = options?.filename || `${data?.name || 'molecule'}_snapshot_${Date.now()}.svg`;
+            
+            // Create Blob from SVG string
+            const blob = new Blob([svgString], { type: 'image/svg+xml' });
+            
+            // Create download link and trigger download
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            URL.revokeObjectURL(url);
+            resolve(filename);
+          });
+        } catch (error) {
+          console.error('Failed to capture SVG:', error);
           resolve(null);
         }
       });

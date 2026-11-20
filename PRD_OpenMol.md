@@ -1,7 +1,7 @@
 # Product Requirements Document (PRD): OpenMol
 
 **Version:** 1.0  
-**Status:** Draft  
+**Status:** MVP Implemented  
 **Date:** November 18, 2026  
 **Target Audience:** Researchers, Educators, Students, and Computational Chemists.
 
@@ -33,40 +33,40 @@ Existing tools like MolView offer high-quality visualization but often gate-keep
 ## 3. Functional Requirements
 
 ### 3.1 Molecular Discovery & Search
-| ID | Requirement | Description |
-| :--- | :--- | :--- |
-| **FR-1.1** | Multi-Source Search | Users can search molecules using PubChem, ZINC, or DrugBank APIs. |
-| **FR-1.2** | Search Criteria | Support for searching by InChI, InChIKey, Molecular Formula, and SMILES. |
-| **FR-1.3** | Information Card | Display chemical identifiers, molecular weight, formula, and direct links to scientific databases. |
+| ID | Requirement | Description | Status |
+| :--- | :--- | :--- | :--- |
+| **FR-1.1** ✅ | Multi-Source Search | Users can search molecules using PubChem, ZINC, or DrugBank APIs. | Implemented (PubChem) |
+| **FR-1.2** ⏳ | Search Criteria | Support for searching by InChI, InChIKey, Molecular Formula, and SMILES. | Planned |
+| **FR-1.3** ✅ | Information Card | Display chemical identifiers, molecular weight, formula, and direct links to scientific databases. | Implemented |
 
 ### 3.2 2D Sketcher (The "Designer")
-| ID | Requirement | Description |
-| :--- | :--- | :--- |
-| **FR-2.1** | Real-time 2D/3D Sync | Changes made in the 2D sketcher must reflect instantly in the 3D viewer. |
-| **FR-2.2** | Chemical Intelligence | Support for bond types (single, double, triple, aromatic), stereochemistry (wedges/dashes), and ring systems. |
-| **FR-2.3** | Reaction Support | Ability to draw chemical reactions (reactants $\rightarrow$ products). |
-| **FR-2.4** | Custom Styling | Ability to change bond thickness, atom colors, and font styles for diagrams. |
+| ID | Requirement | Description | Status |
+| :--- | :--- | :--- | :--- |
+| **FR-2.1** ⏳ | Real-time 2D/3D Sync | Changes made in the 2D sketcher must reflect instantly in the 3D viewer. | Planned |
+| **FR-2.2** ⏳ | Chemical Intelligence | Support for bond types (single, double, triple, aromatic), stereochemistry (wedges/dashes), and ring systems. | Planned |
+| **FR-2.3** ⏳ | Reaction Support | Ability to draw chemical reactions (reactants → products). | Planned |
+| **FR-2.4** ✅ | Custom Styling | Ability to change bond thickness, atom colors, and font styles for diagrams. | Implemented (Basic) |
 
 ### 3.3 3D Visualization Engine
-| ID | Requirement | Description |
-| :--- | :--- | :--- |
-| **FR-3.1** | Interactive Control | Full rotation, zoom, and pan via mouse/touch. |
-| **FR-3.2** | Rendering Modes | Support for Ball-and-Stick, Stick, Wireframe, Space-filling (CPK), and Surface (Electrostatic Potential). |
-| **FR-3.3** | Advanced Models | Support for protein structures (PDB integration) and crystallography models. |
+| ID | Requirement | Description | Status |
+| :--- | :--- | :--- | :--- |
+| **FR-3.1** ✅ | Interactive Control | Full rotation, zoom, and pan via mouse/touch. | Implemented (d3mol) |
+| **FR-3.2** ✅ | Rendering Modes | Support for Ball-and-Stick, Stick, Wireframe, Space-filling (CPK), and Surface (Electrostatic Potential). | Implemented (Basic modes) |
+| **FR-3.3** ⏳ | Advanced Models | Support for protein structures (PDB integration) and crystallography models. | Partially Implemented |
 
 ### 3.4 Data & Image Export
-| ID | Requirement | Description |
-| :--- | :--- | :--- |
-| **FR-4.1** | Publication Graphics | Export 2D diagrams as **SVG** (scalable vector graphics) and high-res **PNG/JPG**. |
-| **FR-4.2** | Scientific Data | Export molecular coordinates as **SDF** (Structure Data File) and **XYZ** formats. |
-| **FR-4.3** | Snapshot Tool | Capture current 3D camera view as a high-resolution image with transparent background. |
+| ID | Requirement | Description | Status |
+| :--- | :--- | :--- | :--- |
+| **FR-4.1** ✅ | Publication Graphics | Export 2D diagrams as **SVG** (scalable vector graphics) and high-res **PNG/JPG**. | Implemented (PNG only) |
+| **FR-4.2** ⏳ | Scientific Data | Export molecular coordinates as **SDF** (Structure Data File) and **XYZ** formats. | Planned |
+| **FR-4.3** ✅ | Snapshot Tool | Capture current 3D camera view as a high-resolution image with transparent background. | Implemented |
 
 ### 3.5 Local Data Management (No Account)
-| ID | Requirement | Description |
-| :--- | :--- | :--- |
-| **FR-5.1** | Local Save | Save current session state (sketch + 3D view) to the browser's `IndexedDB` or `LocalStorage`. |
-| **FR-5.2** | Project Export | Export the entire session state as a proprietary `.openmol` file for later local loading. |
-| **FR-5.3** | Import | Ability to drag and drop a `.openmol` file to restore a previous session. |
+| ID | Requirement | Description | Status |
+| :--- | :--- | :--- | :--- |
+| **FR-5.1** ✅ | Local Save | Save current session state (sketch + 3D view) to the browser's `IndexedDB` or `LocalStorage`. | Implemented |
+| **FR-5.2** ⏳ | Project Export | Export the entire session state as a proprietary `.openmol` file for later local loading. | Planned |
+| **FR-5.3** ⏳ | Import | Ability to drag and drop a `.openmol` file to restore a previous session. | Planned |
 
 ---
 
@@ -101,18 +101,18 @@ Existing tools like MolView offer high-quality visualization but often gate-keep
 ## 6. Roadmap & Phases
 
 ### Phase 1: MVP (Minimum Viable Product)
-- [ ] Basic 2D sketcher integrated with 3D viewer.
-- [ ] Search via PubChem.
-- [ ] Basic PNG/JPG export.
-- [ ] Local storage (auto-save).
+- [x] Basic 2D sketcher integrated with 3D viewer. *(Note: 3D viewer implemented, 2D sketcher planned)*
+- [x] Search via PubChem. ✅
+- [x] Basic PNG/JPG export. *(PNG only, SVG planned)*
+- [x] Local storage (auto-save). ✅
 
 ### Phase 2: Professional Features
-- [ ] Implementation of SVG export (Scalable).
-- [ ] Implementation of SDF/XYZ export.
-- [ ] Advanced 3D rendering modes (Surface/Electrostatic).
-- [ ] Local file import/export (`.openmol`).
+- [x] Implementation of SVG export (Scalable). ✅
+- [ ] Implementation of SDF/XYZ export. ⏳
+- [ ] Advanced 3D rendering modes (Surface/Electrostatic). *(Basic modes implemented)*
+- [ ] Local file import/export (`.openmol`). ⏳
 
 ### Phase 3: Advanced Analytics
-- [ ] Protein/PDB structure support.
-- [ ] Reaction modeling.
+- [ ] Protein/PDB structure support. *(Partial support exists)*
+- [ ] Reaction modeling. *(Note: Requires 2D sketcher implementation)*
 - [ ] Advanced stoichiometry and chemical property calculations.

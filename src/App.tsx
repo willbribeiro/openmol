@@ -102,10 +102,43 @@ END
     }
   };
 
-  // Keyboard shortcut for export (Ctrl+Shift+E)
+  const handleExportSVG = async () => {
+    if (viewerRef.current && molecule) {
+      try {
+        const filename = await viewerRef.current.captureSVG({
+          width: undefined, // Use container width
+          height: undefined, // Use container height
+          scale: 1.5, // Higher resolution for publication quality
+          filename: `${molecule.name.replace(/\s+/g, '_').toLowerCase()}_snapshot.svg`,
+        });
+        
+        if (filename) {
+          setError(null);
+          // Show success message briefly
+          const successMsg = `Exported: ${filename}`;
+          console.log(successMsg);
+        }
+      } catch (err) {
+        console.error('Failed to export SVG:', err);
+        setError('Failed to capture SVG. Please try again.');
+      }
+    } else if (!molecule) {
+      setError('No molecule loaded to export.');
+    }
+  };
+
+  // Keyboard shortcut for PNG export (Ctrl+Shift+E)
   useHotkeys(
     'ctrl+shift+e',
     () => handleExportPNG(),
+    [molecule], // Dependencies
+    { preventDefault: true }
+  );
+
+  // Keyboard shortcut for SVG export (Ctrl+Shift+S)
+  useHotkeys(
+    'ctrl+shift+s',
+    () => handleExportSVG(),
     [molecule], // Dependencies
     { preventDefault: true }
   );
@@ -121,9 +154,9 @@ END
           </div>
           {molecule && (
              <button 
-              onClick={handleReset}
-              title="Clear current molecule"
-              className="text-slate-500 hover:text-red-400 transition-colors"
+               onClick={handleReset}
+               title="Clear current molecule"
+               className="text-slate-500 hover:text-red-400 transition-colors"
              >
                <Trash2 size={16} />
              </button>
@@ -178,11 +211,15 @@ END
                 <Database size={18} />
                 <span>Databases</span>
               </button>
-              <button className="w-full flex items-center gap-3 py-2 px-3 rounded-md hover:bg-slate-700 transition-colors text-sm">
+              <button 
+                onClick={handleExportSVG}
+                disabled={!molecule}
+                className="w-full flex items-center gap-3 py-2 px-3 rounded-md hover:bg-slate-700 transition-colors text-sm disabled:opacity-50"
+              >
                 <Download size={18} />
-                <span>Export</span>
+                <span>Export SVG</span>
               </button>
-              <button className="w-full flex items-center gap-3 py-2 px-3 rounded-md hover:bg-slate/700 transition-colors text-sm">
+              <button className="w-full flex items-center gap-3 py-2 px-3 rounded-md hover:bg-slate-700 transition-colors text-sm">
                 <Settings size={18} />
                 <span>Settings</span>
               </button>
@@ -192,7 +229,7 @@ END
 
         {/* Footer Info */}
         <div className="p-4 border-t border-slate-700 text-[10px] text-slate-500">
-          OpenMol v1.0.0 (MVP) • Privacy-first
+          OpenMol v2.0.0 (SVG Export Added) • Privacy-first
         </div>
       </aside>
 
@@ -212,6 +249,14 @@ END
             >
               <Download size={16} />
               Export PNG
+            </button>
+            <button 
+              onClick={handleExportSVG}
+              disabled={!molecule}
+              className="px-3 py-1 text-sm bg-green-600 hover:bg-green-500 disabled:bg-slate-600 disabled:text-slate-400 rounded text-white transition-colors flex items-center gap-2"
+            >
+              <Download size={16} />
+              Export SVG
             </button>
           </div>
         </header>
