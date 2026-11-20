@@ -58,7 +58,7 @@ Existing tools like MolView offer high-quality visualization but often gate-keep
 | ID | Requirement | Description | Status |
 | :--- | :--- | :--- | :--- |
 | **FR-4.1** ✅ | Publication Graphics | Export 2D diagrams as **SVG** (scalable vector graphics) and high-res **PNG/JPG**. | Implemented (PNG only) |
-| **FR-4.2** ⏳ | Scientific Data | Export molecular coordinates as **SDF** (Structure Data File) and **XYZ** formats. | Planned |
+| **FR-4.2** ✅ | Scientific Data | Export molecular coordinates as **SDF** (Structure Data File) and **XYZ** formats. | Implemented |
 | **FR-4.3** ✅ | Snapshot Tool | Capture current 3D camera view as a high-resolution image with transparent background. | Implemented |
 
 ### 3.5 Local Data Management (No Account)
@@ -108,7 +108,7 @@ Existing tools like MolView offer high-quality visualization but often gate-keep
 
 ### Phase 2: Professional Features
 - [x] Implementation of SVG export (Scalable). ✅
-- [ ] Implementation of SDF/XYZ export. ⏳
+- [x] Implementation of SDF/XYZ export. ✅
 - [ ] Advanced 3D rendering modes (Surface/Electrostatic). *(Basic modes implemented)*
 - [ ] Local file import/export (`.openmol`). ⏳
 
